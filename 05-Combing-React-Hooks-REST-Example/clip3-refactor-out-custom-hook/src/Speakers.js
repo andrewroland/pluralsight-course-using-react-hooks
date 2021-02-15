@@ -1,49 +1,23 @@
-import React, {
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useReducer,
-  useState,
-} from 'react';
+import React, { useCallback, useContext, useMemo, useState } from 'react';
 
 import { Header } from '../src/Header';
 import { Menu } from '../src/Menu';
-import SpeakerData from './SpeakerData';
 import SpeakerDetail from './SpeakerDetail';
 import { ConfigContext } from './App';
-import speakersReducer from './speakersReducer';
+import { GlobalContext } from './GlobalState';
 
 const Speakers = ({}) => {
   const [speakingSaturday, setSpeakingSaturday] = useState(true);
   const [speakingSunday, setSpeakingSunday] = useState(true);
-
-  const [speakerList, dispatch] = useReducer(speakersReducer, []);
-
-  const [isLoading, setIsLoading] = useState(true);
-
   const context = useContext(ConfigContext);
 
-  useEffect(() => {
-    setIsLoading(true);
-    new Promise(function (resolve) {
-      setTimeout(function () {
-        resolve();
-      }, 1000);
-    }).then(() => {
-      setIsLoading(false);
-      const speakerListServerFilter = SpeakerData.filter(({ sat, sun }) => {
-        return (speakingSaturday && sat) || (speakingSunday && sun);
-      });
-      dispatch({
-        type: 'setSpeakerList',
-        data: speakerListServerFilter,
-      });
-    });
-    return () => {
-      console.log('cleanup');
-    };
-  }, []); // [speakingSunday, speakingSaturday]);
+  const {
+    isLoading,
+    speakerList,
+    toggleSpeakerFavorite,
+    hasErrored,
+    error,
+  } = useContext(GlobalContext);
 
   const handleChangeSaturday = () => {
     setSpeakingSaturday(!speakingSaturday);
@@ -51,13 +25,9 @@ const Speakers = ({}) => {
   const handleChangeSunday = () => {
     setSpeakingSunday(!speakingSunday);
   };
-  const heartFavoriteHandler = useCallback((e, favoriteValue) => {
+  const heartFavoriteHandler = useCallback((e, speaker) => {
     e.preventDefault();
-    const sessionId = parseInt(e.target.attributes['data-sessionid'].value);
-    dispatch({
-      type: favoriteValue === true ? 'favorite' : 'unfavorite',
-      sessionId,
-    });
+    toggleSpeakerFavorite(speaker);
   }, []);
 
   const newSpeakerList = useMemo(
@@ -80,6 +50,8 @@ const Speakers = ({}) => {
   );
 
   const speakerListFiltered = isLoading ? [] : newSpeakerList;
+
+  if (hasErrored) return <div>Error: {error.message}</div>;
 
   if (isLoading) return <div>Loading...</div>;
 
@@ -118,21 +90,15 @@ const Speakers = ({}) => {
         </div>
         <div className="row">
           <div className="card-deck">
-            {speakerListFiltered.map(
-              ({ id, firstName, lastName, bio, favorite }) => {
-                return (
-                  <SpeakerDetail
-                    key={id}
-                    id={id}
-                    favorite={favorite}
-                    onHeartFavoriteHandler={heartFavoriteHandler}
-                    firstName={firstName}
-                    lastName={lastName}
-                    bio={bio}
-                  />
-                );
-              },
-            )}
+            {speakerListFiltered.map((speaker) => {
+              return (
+                <SpeakerDetail
+                  key={speaker.id}
+                  speaker={speaker}
+                  onHeartFavoriteHandler={heartFavoriteHandler}
+                />
+              );
+            })}
           </div>
         </div>
       </div>

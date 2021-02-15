@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import { toast, ToastContainer } from 'react-toastify';
+import { ConfigContext } from './App';
 
 const SignMeUp = ({ signupCallback }) => {
   useEffect(() => {
@@ -9,6 +10,8 @@ const SignMeUp = ({ signupCallback }) => {
   const [email, setEmail] = useState();
   const [emailValid, setEmailValid] = useState(false);
   const [sendProcessing, setSendProcessing] = useState(false);
+
+  const context = useContext(ConfigContext);
 
   function validateEmail(email) {
     const re = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
@@ -36,9 +39,7 @@ const SignMeUp = ({ signupCallback }) => {
 
   const buttonText = sendProcessing ? 'processing...' : 'Get Updates';
 
-  //console.log("src/SignMeUp called");
-
-  return (
+  return !context.showSignMeUp ? null : (
     <div className="container">
       <div>
         <ToastContainer />
